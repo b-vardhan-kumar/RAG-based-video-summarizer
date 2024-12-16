@@ -1,0 +1,3 @@
+venv/Lib/site-packages/llvmlite/binding/llvmlite.dll
+venv/Lib/site-packages/torch/lib/torch_cpu.dll
+venv/Lib/site-packages/torch/lib/dnnl.lib
