@@ -1,47 +1,70 @@
 import os
 import yt_dlp
 import subprocess
+import whisper
 
 def download_video(youtube_url, video_folder="video_downloads", audio_folder="audio_downloads"):
+    """
+    Downloads a YouTube video and saves it in the specified folder. Extracts audio and saves it in another folder.
+    """
     # Ensure the video and audio output folders exist
-    if not os.path.exists(video_folder):
-        os.makedirs(video_folder)
-    if not os.path.exists(audio_folder):
-        os.makedirs(audio_folder)
+    os.makedirs(video_folder, exist_ok=True)
+    os.makedirs(audio_folder, exist_ok=True)
 
     # Define the output template to save videos in the video folder
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best',  # Download the best video and audio streams
-        'outtmpl': os.path.join(video_folder, '%(title)s.%(ext)s'),  # Save with title as filename
+        'merge_output_format': 'mp4',  # Merge video and audio into MP4
+        'outtmpl': os.path.join(video_folder, '%(title)s.%(ext)s'),  # Save video with title as filename
     }
 
+    # Download the video using yt-dlp
+    print("Downloading video...")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([youtube_url])
-        print(f"Video downloaded to folder: {video_folder}")
+        info = ydl.extract_info(youtube_url, download=True)  # Download and retrieve metadata
+        video_title = info.get('title', 'video')  # Get the video title from metadata
 
-    # Find the downloaded video (it may be in .mkv format or any other format)
-    video_file = os.path.join(video_folder, f'{yt_dlp.YoutubeDL().extract_info(youtube_url, download=False)["title"]}.mkv')
-    audio_file = os.path.join(audio_folder, f'{yt_dlp.YoutubeDL().extract_info(youtube_url, download=False)["title"]}.mp3')
+    video_file = os.path.join(video_folder, f"{video_title}.mp4")
+    audio_file = os.path.join(audio_folder, f"{video_title}.mp3")
 
-    # Convert MKV to MP4 using FFmpeg
-    convert_to_mp4(video_file)
-    
-    # Extract audio from the converted MP4
+    # Extract audio from the downloaded MP4 file
     extract_audio(video_file, audio_file)
 
-def convert_to_mp4(video_path):
-    # Convert MKV (or other formats) to MP4
-    mp4_path = video_path.replace('.mkv', '.mp4')
-    command = ["ffmpeg", "-i", video_path, "-c:v", "libx264", "-c:a", "aac", "-strict", "experimental", mp4_path]
-    subprocess.run(command)
-    print(f"Video converted to: {mp4_path}")
+    return audio_file  # Return the path to the extracted audio file
 
 def extract_audio(video_path, audio_path):
-    # FFmpeg command to extract audio
+    """
+    Extracts audio from a given video file using FFmpeg.
+    """
+    print("Extracting audio...")
     command = ["ffmpeg", "-i", video_path, "-q:a", "0", "-map", "a", audio_path]
-    subprocess.run(command)
+    subprocess.run(command, check=True)
     print(f"Audio extracted to: {audio_path}")
 
+def transcribe_audio(audio_path, model_name="base"):
+    """
+    Transcribes audio to text using Whisper.
+    """
+    print(f"Loading Whisper model: {model_name}...")
+    model = whisper.load_model(model_name)
+
+    print("Transcribing audio...")
+    result = model.transcribe(audio_path)
+    print("Transcription completed.")
+    return result['text']
+
 # Example usage
-youtube_url = "https://www.youtube.com/watch?v=6sim9aF3g2c"
-download_video(youtube_url)
+if __name__ == "__main__":
+    youtube_url = "https://www.youtube.com/watch?v=6sim9aF3g2c"  # Replace with your YouTube URL
+    
+    # Step 1: Download video and extract audio
+    audio_file = download_video(youtube_url)
+
+    # Step 2: Transcribe audio to text
+    transcript = transcribe_audio(audio_file)
+
+    # Step 3: Save the transcript to a text file
+    transcript_file = "transcript.txt"
+    with open(transcript_file, "w") as file:
+        file.write(transcript)
+    print(f"Transcript saved to: {transcript_file}")

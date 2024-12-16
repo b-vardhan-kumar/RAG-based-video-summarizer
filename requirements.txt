@@ -1,1 +1,5 @@
-yt_dlp
+yt-dlp
+openai-whisper
+torch
+torchvision
+torchaudio
