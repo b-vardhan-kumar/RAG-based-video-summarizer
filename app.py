@@ -3,16 +3,12 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from transformers import pipeline
 import json
-import openai
 import os
 import yt_dlp
 import subprocess
 import whisper
 import streamlit as st
 import re  # Regular expressions for sanitizing filenames
-
-# OpenAI API Key Configuration (Replace with your OpenAI key if you want to use GPT models)
-openai.api_key = "your_openai_api_key"
 
 def sanitize_filename(filename):
     """
