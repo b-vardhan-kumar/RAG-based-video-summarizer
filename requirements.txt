@@ -4,3 +4,9 @@ torch==2.0.1+cpu      # Use appropriate version if GPU is available (e.g., 'torc
 torchvision==0.15.2+cpu
 torchaudio==2.0.1+cpu
 ffmpeg-python         # Optional Python wrapper for FFmpeg, not mandatory but useful
+faiss-cpu   
+sentence-transformers
+numpy
+transformers
+openai
+streamlit
