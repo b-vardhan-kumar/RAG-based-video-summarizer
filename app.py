@@ -9,6 +9,7 @@ import subprocess
 import whisper
 import streamlit as st
 import re  # Regular expressions for sanitizing filenames
+import torch
 
 def sanitize_filename(filename):
     """
@@ -49,12 +50,16 @@ def extract_audio(video_path, audio_path):
     command = ["ffmpeg", "-y", "-i", video_path, "-q:a", "0", "-map", "a", audio_path]
     subprocess.run(command, check=True)
 
-
 def transcribe_audio(audio_path, model_name="base"):
     """
-    Transcribes audio to text using Whisper.
+    Transcribes audio to text using Whisper, optimized for GPU if available.
     """
-    model = whisper.load_model(model_name)
+    # Set device to GPU if available
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    model = whisper.load_model(model_name, device=device)
+    
+    # Perform transcription
     result = model.transcribe(audio_path)
     return result['text']
 
@@ -121,25 +126,32 @@ def generate_answer_with_huggingface(context, query):
 st.title("RAG-based Video Q&A System")
 st.subheader("Enter YouTube Video URL and ask questions")
 
-# User Input: Video URL
+# User Input: Video URL and Query
 youtube_url = st.text_input("Enter YouTube Video URL")
+query = st.text_input("Ask a question about the video:")
 
-if youtube_url:
-    # Download and Transcribe (transcription is only used for embedding and context retrieval)
-    audio_file, video_title = download_video(youtube_url)
-    transcription = transcribe_audio(audio_file)
+# Add button to trigger processing
+if st.button("Start Processing"):
 
-    # Initialize FAISS and Add Embedding
-    faiss_index = initialize_faiss_database(384)
-    embedding = generate_embeddings(transcription)
-    add_to_faiss(faiss_index, embedding, [{"video_title": video_title, "transcription": transcription}])
+    # Check if both fields are filled
+    if youtube_url and query:
+        with st.spinner('Processing...'):
+            # Download and Transcribe (transcription is only used for embedding and context retrieval)
+            audio_file, video_title = download_video(youtube_url)
+            
+            # Transcription with GPU optimization
+            transcription = transcribe_audio(audio_file, model_name="base")
 
-    # User Query
-    query = st.text_input("Ask a question about the video:")
+        # Initialize FAISS and Add Embedding
+        faiss_index = initialize_faiss_database(384)
+        embedding = generate_embeddings(transcription)
+        add_to_faiss(faiss_index, embedding, [{"video_title": video_title, "transcription": transcription}])
 
-    if query:
         context = retrieve_context(faiss_index, query)
 
         # Generate answer
         answer = generate_answer_with_huggingface(context, query)
         st.write(f"Answer: {answer}")
+
+    else:
+        st.warning("Please fill in both the YouTube video URL and your query.")
