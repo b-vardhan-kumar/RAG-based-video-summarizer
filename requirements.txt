@@ -1,7 +1,7 @@
 yt-dlp==2024.12.13
 openai-whisper
 torch==2.5.1      # Use appropriate version if GPU is available (e.g., 'torch==2.0.1+cu118')
-torchvision==0.15.2
+torchvision==0.20.1
 torchaudio==2.0.1
 ffmpeg-python         # Optional Python wrapper for FFmpeg, not mandatory but useful
 faiss-cpu   
