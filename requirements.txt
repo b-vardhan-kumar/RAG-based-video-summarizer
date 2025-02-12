@@ -1,9 +1,9 @@
 yt-dlp==2024.12.13
 openai-whisper
-torch==2.0.1      # Downgraded for better compatibility with Streamlit Cloud
+torch==2.0.1      # Downgraded for Streamlit Cloud compatibility
 torchvision==0.15.2
 torchaudio==2.0.2
-ffmpeg-python  # Keep if needed, but install system-level ffmpeg via packages.txt
+ffmpeg-python  # Keep only if needed, since ffmpeg is installed via packages.txt
 faiss-cpu
 sentence-transformers
 numpy
