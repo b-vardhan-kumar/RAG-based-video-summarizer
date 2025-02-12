@@ -1,8 +1,8 @@
-yt-dlp==2024.12.13
+yt-dlp
 openai-whisper
-torch==2.2.0  # Use the correct version
-torchvision==0.20.1  # Updated to a compatible version
-torchaudio==2.2.0  # Match with the torch version
+torch
+torchvision
+torchaudio
 ffmpeg-python
 faiss-cpu
 sentence-transformers
